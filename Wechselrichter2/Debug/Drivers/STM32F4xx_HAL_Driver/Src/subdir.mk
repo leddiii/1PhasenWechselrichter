@@ -69,7 +69,7 @@ Drivers/STM32F4xx_HAL_Driver/Src/%.o: ../Drivers/STM32F4xx_HAL_Driver/Src/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: MCU GCC Compiler'
 	@echo $(PWD)
-	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -DUSE_HAL_DRIVER -DSTM32F446xx -I"C:/Users/nicol/Documents/STM32/Wechselrichter2/Core/Inc" -I"C:/Users/nicol/Documents/STM32/Wechselrichter2/Drivers/STM32F4xx_HAL_Driver/Inc" -I"C:/Users/nicol/Documents/STM32/Wechselrichter2/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy" -I"C:/Users/nicol/Documents/STM32/Wechselrichter2/Drivers/CMSIS/Device/ST/STM32F4xx/Include" -I"C:/Users/nicol/Documents/STM32/Wechselrichter2/Drivers/CMSIS/Include"  -Og -g3 -Wall -fmessage-length=0 -ffunction-sections -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -DUSE_HAL_DRIVER -DSTM32F446xx -I"C:/Users/nicol/Documents/STM32/1PhasenWechselrichter/Wechselrichter2/Core/Inc" -I"C:/Users/nicol/Documents/STM32/1PhasenWechselrichter/Wechselrichter2/Drivers/STM32F4xx_HAL_Driver/Inc" -I"C:/Users/nicol/Documents/STM32/1PhasenWechselrichter/Wechselrichter2/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy" -I"C:/Users/nicol/Documents/STM32/1PhasenWechselrichter/Wechselrichter2/Drivers/CMSIS/Device/ST/STM32F4xx/Include" -I"C:/Users/nicol/Documents/STM32/1PhasenWechselrichter/Wechselrichter2/Drivers/CMSIS/Include"  -Og -g3 -Wall -fmessage-length=0 -ffunction-sections -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
