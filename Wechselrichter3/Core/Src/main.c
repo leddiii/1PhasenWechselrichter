@@ -115,6 +115,14 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+
+  //HAL_DMA_Start(&htim1,*DMA_Buffer, DMA2_Stream6 ,255);
+
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+
+  //HAL_TIM_PWM_Start_DMA(&htim1, DMA_CHANNEL_6, DMA2_Stream1,256);
+  //HAL_TIM_PWM_Start_DMA(&htim1, DMA_CHANNEL_6, DMA2_Stream2,256);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -133,7 +141,7 @@ int main(void)
 	  	  Sollwert_Double =i/10+25;
 
 	  	  printf ("Sollwert: %2.2f  Hz    AD-Eingang: %3i   \n", Sollwert_Double, Sollwert);
-	  	  HAL_Delay(100);
+
 
 
 	  	  uint16_t *DMA_Buffer;
@@ -141,9 +149,14 @@ int main(void)
 
 
 
-	  	 for (int Wert=0; Wert<=255; Wert++){
+	  	 for (int Wert=0; Wert<=size; Wert++){
 	  		 printf ("DMA_Buffer %3i  =  %5i   \t \n  ", Wert , DMA_Buffer[Wert]);
 	  	 }
+
+	  	TIM1 ->CCR1 = *DMA_Buffer;
+	  	HAL_TIM_PWM_Start_DMA(&htim1,TIM_CHANNEL_1,DMA2_Stream6,256);
+	    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+
 
 
   }
