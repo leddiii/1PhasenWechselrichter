@@ -37,7 +37,7 @@ void MX_TIM1_Init(void)
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 55;
+  //htim1.Init.Prescaler = 55;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 255;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -73,7 +73,7 @@ void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM2;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
@@ -126,12 +126,12 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     /* TIM1_CH2 Init */
     hdma_tim1_ch2.Instance = DMA2_Stream2;
     hdma_tim1_ch2.Init.Channel = DMA_CHANNEL_6;
-    hdma_tim1_ch2.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_tim1_ch2.Init.Direction = DMA_MEMORY_TO_PERIPH;
     hdma_tim1_ch2.Init.PeriphInc = DMA_PINC_DISABLE;
     hdma_tim1_ch2.Init.MemInc = DMA_MINC_ENABLE;
     hdma_tim1_ch2.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
     hdma_tim1_ch2.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-    hdma_tim1_ch2.Init.Mode = DMA_CIRCULAR;
+    hdma_tim1_ch2.Init.Mode = DMA_NORMAL;
     hdma_tim1_ch2.Init.Priority = DMA_PRIORITY_LOW;
     hdma_tim1_ch2.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_tim1_ch2) != HAL_OK)
@@ -161,7 +161,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef* timHandle)
     PA8     ------> TIM1_CH1
     PA9     ------> TIM1_CH2
     */
-    GPIO_InitStruct.Pin = Sinus_positiv_Pin|Sinus_negativ_Pin;
+    GPIO_InitStruct.Pin = PWM_IGBT2_Pin|PWM_IGBT1_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
