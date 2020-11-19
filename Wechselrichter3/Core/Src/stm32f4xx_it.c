@@ -23,6 +23,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "tim.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,7 +43,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+uint32_t Zaehler_IGBT = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,9 +58,14 @@
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc1;
-extern DMA_HandleTypeDef hdma_tim1_ch1;
-extern DMA_HandleTypeDef hdma_tim1_ch2;
+extern DMA_HandleTypeDef hdma_tim1_ch3;
+extern DMA_HandleTypeDef hdma_tim8_ch4_trig_com;
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim8;
+extern TIM_HandleTypeDef htim10;
 /* USER CODE BEGIN EV */
+
+extern volatile uint8_t EIN_AUS;
 
 /* USER CODE END EV */
 
@@ -200,17 +206,81 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles EXTI line[15:10] interrupts.
+  * @brief This function handles EXTI line 1 interrupt.
   */
-void EXTI15_10_IRQHandler(void)
+void EXTI1_IRQHandler(void)
 {
-  /* USER CODE BEGIN EXTI15_10_IRQn 0 */
+  /* USER CODE BEGIN EXTI1_IRQn 0 */
+	 //HAL_GPIO_TogglePin(LD2_GPIO_Port,LD2_Pin);	// Der Pin für die interne LED wird getoggelt (wenn EIN dann AUS bzw wenn AUS dann EIN
 
-  /* USER CODE END EXTI15_10_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
-  /* USER CODE BEGIN EXTI15_10_IRQn 1 */
+	   if (EIN_AUS==0)
+	   {															// Wenn die Variable i 0 ist wird folgendes ausgeführt:
+		   EIN_AUS= 1;	// die Variable i wird auf den Wert 1 gesetzt
+		   HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,SET);
+	   }
 
-  /* USER CODE END EXTI15_10_IRQn 1 */
+	     else if (EIN_AUS==1)
+	     {														// Wenn die Variable i 1 ist wird folgendes ausgeführt:
+	    	 EIN_AUS= 0;
+	    	 HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,RESET);
+	     }
+  /* USER CODE END EXTI1_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+  /* USER CODE BEGIN EXTI1_IRQn 1 */
+
+
+  /* USER CODE END EXTI1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 update interrupt and TIM10 global interrupt.
+  */
+void TIM1_UP_TIM10_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
+
+	Zaehler_IGBT ++;
+
+	if(Zaehler_IGBT==256)
+	{
+HAL_GPIO_TogglePin(IGBT3_GPIO_Port,IGBT3_Pin);
+HAL_GPIO_TogglePin(IGBT4_GPIO_Port,IGBT4_Pin);
+Zaehler_IGBT = 0;
+	}
+  /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  HAL_TIM_IRQHandler(&htim10);
+  /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
+
+  /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 trigger and commutation interrupts and TIM11 global interrupt.
+  */
+void TIM1_TRG_COM_TIM11_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_TRG_COM_TIM11_IRQn 0 */
+
+  /* USER CODE END TIM1_TRG_COM_TIM11_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  /* USER CODE BEGIN TIM1_TRG_COM_TIM11_IRQn 1 */
+
+  /* USER CODE END TIM1_TRG_COM_TIM11_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM8 update interrupt and TIM13 global interrupt.
+  */
+void TIM8_UP_TIM13_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 0 */
+
+  /* USER CODE END TIM8_UP_TIM13_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim8);
+  /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 1 */
+
+  /* USER CODE END TIM8_UP_TIM13_IRQn 1 */
 }
 
 /**
@@ -228,31 +298,31 @@ void DMA2_Stream0_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles DMA2 stream1 global interrupt.
+  * @brief This function handles DMA2 stream6 global interrupt.
   */
-void DMA2_Stream1_IRQHandler(void)
+void DMA2_Stream6_IRQHandler(void)
 {
-  /* USER CODE BEGIN DMA2_Stream1_IRQn 0 */
+  /* USER CODE BEGIN DMA2_Stream6_IRQn 0 */
 
-  /* USER CODE END DMA2_Stream1_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_tim1_ch1);
-  /* USER CODE BEGIN DMA2_Stream1_IRQn 1 */
+  /* USER CODE END DMA2_Stream6_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_tim1_ch3);
+  /* USER CODE BEGIN DMA2_Stream6_IRQn 1 */
 
-  /* USER CODE END DMA2_Stream1_IRQn 1 */
+  /* USER CODE END DMA2_Stream6_IRQn 1 */
 }
 
 /**
-  * @brief This function handles DMA2 stream2 global interrupt.
+  * @brief This function handles DMA2 stream7 global interrupt.
   */
-void DMA2_Stream2_IRQHandler(void)
+void DMA2_Stream7_IRQHandler(void)
 {
-  /* USER CODE BEGIN DMA2_Stream2_IRQn 0 */
+  /* USER CODE BEGIN DMA2_Stream7_IRQn 0 */
 
-  /* USER CODE END DMA2_Stream2_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_tim1_ch2);
-  /* USER CODE BEGIN DMA2_Stream2_IRQn 1 */
+  /* USER CODE END DMA2_Stream7_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_tim8_ch4_trig_com);
+  /* USER CODE BEGIN DMA2_Stream7_IRQn 1 */
 
-  /* USER CODE END DMA2_Stream2_IRQn 1 */
+  /* USER CODE END DMA2_Stream7_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

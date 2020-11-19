@@ -12,22 +12,49 @@ float tiefpass(float Uk, float Ykminus1)
     return YK;
 }
 
-int *getPWM_Array(double Sollwert)
+uint16_t *getPWM_Array1(double Sollwert)
 {
     Omega = 2.0 * M_PI * Sollwert;
 
-    for (int Wert = 0; Wert <= size; Wert++)
+    for (int Wert = 0; Wert <= 255; Wert++)
     {
-    	Winkel = (180.0/254.0)*Wert;
+    	Winkel = (180.0/255.0)*Wert;
     	Winkelzeit = ((1/Sollwert)/360.0) * Winkel;
 
-        Puls = sin(Omega * Winkelzeit) * 255;
-        Array[Wert] = (int)Puls;
+        Puls = (sin(Omega * Winkelzeit))*(9.98*Sollwert);
+        Array1[Wert] = (uint16_t)Puls;
 
-        printf(" Wert=  %3i  Winkel=  %1.10f   Winkelzeit=  %1.10f   Puls=   %4.4f  \t \n",Wert, Winkel, Winkelzeit, Puls);
+        //printf(" Wert=%3i Winkel=%1.10f Winkel_t=%1.10f Puls=%4.4f SW=%3.3f \t \n",Wert, Winkel, Winkelzeit, Puls, Sollwert);
+    }
+    for (int i=255;i<=size;i++)
+    {
+    	Array1[i]=0;
     }
 
-    return Array;
+    return Array1;
+}
+
+
+uint16_t *getPWM_Array2(double Sollwert)
+{
+    Omega = 2.0 * M_PI * Sollwert;
+
+    for (int Wert = 0; Wert <= 255; Wert++)
+    {
+    	Winkel = (180.0/255.0)*Wert;
+    	Winkelzeit = ((1/Sollwert)/360.0) * Winkel;
+
+        Puls = (sin(Omega * Winkelzeit))*(9.98*Sollwert);
+        Array2[Wert+256] = (uint16_t)Puls;
+
+        //printf(" Wert=%3i Winkel=%1.10f Winkel_t=%1.10f Puls=%4.4f SW=%3.3f \t \n",Wert, Winkel, Winkelzeit, Puls, Sollwert);
+    }
+    for (int i=0;i<=255;i++)
+    {
+    	Array2[i]=0;
+    }
+
+    return Array2;
 }
 
 

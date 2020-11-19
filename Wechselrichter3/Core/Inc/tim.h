@@ -31,12 +31,17 @@
 /* USER CODE END Includes */
 
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim8;
+extern TIM_HandleTypeDef htim10;
 
 /* USER CODE BEGIN Private defines */
+//extern DMA_HandleTypeDef hdma_tim1_ch3;
 
 /* USER CODE END Private defines */
 
 void MX_TIM1_Init(void);
+void MX_TIM8_Init(void);
+void MX_TIM10_Init(void);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 

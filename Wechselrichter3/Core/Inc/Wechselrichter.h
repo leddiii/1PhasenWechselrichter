@@ -3,17 +3,19 @@
 
 #include "main.h"
 
-#define size 254
+#define size 511
 float YKminus1; // YKminus1 wird als float mit dem Wert0 deklariert
 float YK;
 double Puls;
 double Omega;
-uint8_t   Array[256];
+uint16_t   Array1[511];
+uint16_t   Array2[511];
 double Winkel;
 double Winkelzeit;
 
 float tiefpass(float, float);
-int *getPWM_Array(double);
+uint16_t *getPWM_Array1(double);
+uint16_t *getPWM_Array2(double);
 
 #endif
 

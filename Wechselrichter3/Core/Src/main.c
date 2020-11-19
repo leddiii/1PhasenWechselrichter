@@ -48,10 +48,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t DMA_Buffer [256];
-uint16_t Puls_INT =0;
-uint16_t Sollwert =0;
-uint8_t  NEW_PS = 0;
+uint8_t Puls_INT =0;
+uint8_t Sollwert =0;
+uint8_t Sollwert_ALT=0;
+ uint8_t  NEW_PS;
 float i= 0;
 double Sollwert_Double =0;
 float YKminus1 =0.0;																// YKminus1 wird als float mit dem Wert0 deklariert
@@ -59,13 +59,9 @@ double Puls;
 double Wink=0.0;
 double tim=0.0;
 double Omega=0.0;
-
-
-TIM_HandleTypeDef htim1;         /**< Handle Timer 1             */
-DMA_HandleTypeDef hdma_tim1_ch1; /**< Handle DMA Timer 1 Kanal 1 */
-UART_HandleTypeDef huart2;       /**< Handle Uart2               */
-
-
+volatile static char DMA_CH2 [511];
+volatile static char DMA_CH [511];
+volatile uint8_t EIN_AUS =0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,6 +82,45 @@ PUTCHAR_PROTOTYPE
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/*
+
+void Wechsel_IGBTs_TIM8_AUS_TIM1_EIN(){
+	HAL_TIM_PWM_Stop_DMA(&htim8, TIM_CHANNEL_4);
+	HAL_Delay(10);
+	HAL_TIM_PWM_Start_DMA( &htim1, TIM_CHANNEL_3,(uint32_t*)DMA_CH, size);
+	//if(NEUE_Werte==1){
+		//HAL_DMA_Start(&htim1,(uint32_t*)&DMA,(uint32_t*)DMA_CH2,size);
+		//uint16_t*DMA_CH2;
+		//DMA_CH2= (uint16_t*)&DMA;
+		//for(int o=0;o<255;o++){
+					//printf("%3i  DMA_CH2= %4i \n \t", o,DMA_CH2[o]);
+				//}
+	//}
+}
+
+void Wechsel_IGBTs_TIM1_AUS_TIM8_EIN(){
+	HAL_TIM_PWM_Stop_DMA(&htim1, TIM_CHANNEL_3);
+	HAL_Delay(10);
+	HAL_TIM_PWM_Start_DMA( &htim8, TIM_CHANNEL_4,(uint32_t*)DMA_CH2, size);
+	//if(NEUE_Werte==1){
+		//HAL_DMA_Start(&htim1,(uint32_t*)&DMA,(uint32_t*)DMA_CH3,size);
+		//uint16_t*DMA_CH3;
+		//DMA_CH3= (uint16_t*)&DMA;
+		//for(int o=0;o<255;o++){
+			//printf("%3i  DMA_CH2= %4i \n \t", o,DMA_CH3[o]);
+		//}
+	//}
+}
+
+*/
+
+void NEW_Pres(double Sollwert){
+	 NEW_PS= 63.0-Sollwert_Double;
+	__HAL_TIM_SET_PRESCALER(&htim1, NEW_PS);
+	__HAL_TIM_SET_PRESCALER(&htim8, NEW_PS);
+	__HAL_TIM_SET_PRESCALER(&htim10, NEW_PS);
+}
 
 /* USER CODE END 0 */
 
@@ -121,15 +156,10 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_USART2_UART_Init();
+  MX_TIM8_Init();
+  MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 
-
-  //HAL_DMA_Start(&htim1,*DMA_Buffer, DMA2_Stream6 ,255);
-
-
-
-  //HAL_TIM_PWM_Start_DMA(&htim1, DMA_CHANNEL_6, DMA2_Stream1,256);
-  //HAL_TIM_PWM_Start_DMA(&htim1, DMA_CHANNEL_6, DMA2_Stream2,256);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -139,46 +169,64 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-	  	  HAL_ADC_Start(&hadc1);
+if (EIN_AUS==1){
+	  HAL_ADC_Start(&hadc1);
 	  	  HAL_ADC_PollForConversion(&hadc1,100);
-	  	  Sollwert = HAL_ADC_GetValue(&hadc1);
-	  	  //i= tiefpass(Sollwert, YKminus1);
-	  	  //YKminus1=i;
-	  	  Sollwert_Double =Sollwert/10+25;
+	  	  Sollwert =HAL_ADC_GetValue(&hadc1);
+	  	Sollwert_Double =Sollwert/10+25;
 
-	  	  printf ("Sollwert: %2.2f  Hz    AD-Eingang: %3i   \n", Sollwert_Double, Sollwert);
-	  	  NEW_PS= 180000000/((Sollwert/10+25)*255*255);
+	  	  if (Sollwert_ALT-3>Sollwert||Sollwert_ALT+3<=Sollwert)
+	  	  {
+	  		  uint16_t *DMA_CH;
+	  		  DMA_CH = (uint16_t*) getPWM_Array1(Sollwert_Double) ;
 
-	  	  htim1.Init.Prescaler= NEW_PS -1;
+	  		  uint16_t *DMA_CH2;
+	  		  DMA_CH2 = (uint16_t*) getPWM_Array2(Sollwert_Double) ;
 
-	  	  uint8_t *DMA_Buffer;
-	  	  DMA_Buffer = (uint8_t*) getPWM_Array(Sollwert_Double) ;
+	  		  HAL_TIM_PWM_Start_DMA( &htim8, TIM_CHANNEL_4, (uint32_t*)DMA_CH, 511);
+
+	  		  HAL_TIM_PWM_Start_DMA( &htim1, TIM_CHANNEL_3, (uint32_t*)DMA_CH2, 511);
+
+	  		  HAL_TIM_Base_Start_IT(&htim10);
+	  		  NEW_Pres(Sollwert_Double);
+
+	  		  Sollwert_ALT=Sollwert;
+	  	  }
+
+	  	  else
+	  	  {
+
+	  	  }
+
+}
+else
+{
+HAL_TIM_PWM_Stop_DMA(&htim8,TIM_CHANNEL_4);
+HAL_TIM_PWM_Stop_DMA(&htim1,TIM_CHANNEL_3);
+}
 
 
 
-	  	 for (int Wert=0; Wert<=size; Wert++){
-	  		 printf ("DMA_Buffer %3i  =  %5i   \t \n  ", Wert , DMA_Buffer[Wert]);
-	  	 }
-	  	HAL_UART_Transmit(&htim1,(uint8_t*)DMA_Buffer, 256, 100 );
-	  	 printf ("Transfer hat geklappt \n  ");
 
-	  	 /*
-	  	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	  	 printf ("PWM1 Starten hat geklappt \n  ");
-	  	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-	  	printf ("PWM2 Starten hat geklappt \n  ");
-	  	//HAL_DMA_Start(DMA_CHANNEL_6,(int*) DMA_Buffer, DMA2_Stream1,size);
-	  	//printf ("DMA Starten hat geklappt \n  ");
-	  	//HAL_DMA_Start_IT(DMA_CHANNEL_6,*DMA_Buffer,DMA2_Stream1,size );
-	  	//printf ("DMA_IT Starten hat geklappt \n  ");
 
-	  	 */
-	  	HAL_TIM_PWM_Start_DMA(&htim1,TIM_CHANNEL_1,DMA2_Stream1, size);
-	  	printf ("PWM1 Starten hat geklappt \n  ");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   }
+
   /* USER CODE END 3 */
 }
 
