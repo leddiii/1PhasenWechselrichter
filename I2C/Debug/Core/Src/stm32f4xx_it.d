@@ -29,7 +29,6 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c \
  C:/Users/nicol/Documents/STM32/I2C/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  C:/Users/nicol/Documents/STM32/I2C/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  C:/Users/nicol/Documents/STM32/I2C/Core/Inc/stm32f4xx_it.h \
- C:/Users/nicol/Documents/STM32/I2C/Core/Inc/i2c.h \
  C:/Users/nicol/Documents/STM32/I2C/Core/Inc/main.h
 
 C:/Users/nicol/Documents/STM32/I2C/Core/Inc/main.h:
@@ -91,7 +90,5 @@ C:/Users/nicol/Documents/STM32/I2C/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ha
 C:/Users/nicol/Documents/STM32/I2C/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 
 C:/Users/nicol/Documents/STM32/I2C/Core/Inc/stm32f4xx_it.h:
-
-C:/Users/nicol/Documents/STM32/I2C/Core/Inc/i2c.h:
 
 C:/Users/nicol/Documents/STM32/I2C/Core/Inc/main.h:

@@ -23,7 +23,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "i2c.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,10 +44,6 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 
-
-uint8_t get [4]={0x12,0x01,0x53,0x66};
-uint8_t abfragepuffer[10];
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,8 +59,9 @@ uint8_t abfragepuffer[10];
 /* External variables --------------------------------------------------------*/
 
 /* USER CODE BEGIN EV */
+
 extern uint8_t status;
-extern uint8_t* ack;
+
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -210,22 +207,11 @@ void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
-//HAL_I2C_Mem_Read(&hi2c1,0xDE,getbuf,4,abfrage,64,0xff);
+  status=edip240_SchalterStellung(0xDE,0x11);
+
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
-
-
-HAL_I2C_Master_Transmit(&hi2c1,0xDE,get,4,0xff);
-if (HAL_GPIO_ReadPin(getbuf_GPIO_Port,getbuf_Pin)==0)
-{
-	HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,RESET);
-	HAL_I2C_Master_Receive(&hi2c1,0xDE,ack,1,0xff);
-	HAL_I2C_Master_Receive(&hi2c1,0xDE,abfragepuffer,7,0xff);
-}
-
-status= abfragepuffer[5];
-
 
   /* USER CODE END EXTI9_5_IRQn 1 */
 }

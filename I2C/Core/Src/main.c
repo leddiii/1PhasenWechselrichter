@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "string.h"
 #include "stdio.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +56,7 @@ uint8_t ack[2];
 uint8_t  len;
 uint8_t bcc;
 uint8_t ret;
+uint8_t ausfuehrung=0;
 volatile uint8_t status;
 
 
@@ -80,7 +82,80 @@ PUTCHAR_PROTOTYPE
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint8_t edip240_SchalterStellung (uint8_t BaseAdress, uint8_t I2CAdress)
+{
+	uint8_t bcc=0;
+	uint8_t ack[1];
+	uint8_t Sendeanfrage[4];
+	uint8_t Rueckgabewert[7];
+	uint8_t Pruefsumme=0;
 
+	Sendeanfrage[0]=I2CAdress+1;
+	Sendeanfrage[1]=0x01;
+	Sendeanfrage[2]=0x53;
+	for (int i=0;i<=2;i++)
+	{
+		bcc += Sendeanfrage[i];
+	}
+	Sendeanfrage[3]=bcc;
+
+	HAL_I2C_Master_Transmit(&hi2c1,BaseAdress,Sendeanfrage,4,0xff);
+	HAL_I2C_Master_Receive(&hi2c1,BaseAdress,ack,1,0xff);
+	HAL_I2C_Master_Receive(&hi2c1,BaseAdress,Rueckgabewert,7,0xff);
+
+
+for(int i=0;i<=6;i++)
+{
+	printf("Rueckgabewert %2i= %2x \n",i,Rueckgabewert[i]);
+}
+
+
+	for(int p=0;p<=5;p++)
+	{
+		Pruefsumme += Rueckgabewert[p];
+	}
+	printf("Pruefsumme= %2x \n",Pruefsumme);
+	if (Pruefsumme== Rueckgabewert[6])
+	{
+		if (Rueckgabewert[0]==I2CAdress)
+		{
+			if(Rueckgabewert[2]==0x1B)
+			{
+				if(Rueckgabewert[3]==0x41)
+				{
+					return Rueckgabewert[5];
+				}
+			}
+		}
+	}
+
+}
+
+
+void edip240_Gerade_zeichnen(uint8_t Baseadress, uint8_t I2CAdress, uint8_t x1,uint8_t y1,uint8_t x2,uint8_t y2)
+{
+	uint8_t sendbuf[10];
+	uint8_t bcc=0;
+	uint8_t ack[1];
+	sendbuf[0]= I2CAdress;
+	sendbuf[1]= 0x07;
+	sendbuf[2]= 0x1B;
+	sendbuf[3]= 0x47;
+	sendbuf[4]= 0x44;
+	sendbuf[5]= x1;
+	sendbuf[6]= y1;
+	sendbuf[7]= x2;
+	sendbuf[8]= y2;
+
+	for (int i=0;i<=8;i++)
+		{
+			bcc += sendbuf[i];
+		}
+		sendbuf[9]=bcc;
+
+	HAL_I2C_Master_Transmit(&hi2c1,Baseadress,sendbuf,10,0xff);
+	HAL_I2C_Master_Receive(&hi2c1,Baseadress,ack,1,0xff);
+}
 /* USER CODE END 0 */
 
 /**
@@ -90,41 +165,6 @@ PUTCHAR_PROTOTYPE
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	/*sendbuf[0] = 0x11;
-
-	  sendbuf[1] = 0x16;			//len
-	  sendbuf[2] = 0x1B;		// ESC
-	  sendbuf[3] = 0x44;		// D
-	  sendbuf[4] = 0x4C;		// L
-	  sendbuf[5] = 0x1B;
-	  sendbuf[6] = 0x41;
-	  sendbuf[7] = 0x4B;
-	  sendbuf[8] = 0x64;
-	  sendbuf[9] = 0x32;
-	  sendbuf[10] = 0x8C;
-	  sendbuf[11] = 0x4E;
-	  sendbuf[12] = 0xAB;
-	  sendbuf[13] = 0xCD;
-	  sendbuf[14] = 0x43;
-	  sendbuf[15] = 0x54;
-	  sendbuf[16] = 0x65;
-	  sendbuf[17] = 0x73;
-	  sendbuf[18] = 0x74;
-	  sendbuf[19] = 0x00;
-	  sendbuf[20] = 0x1B;
-	  sendbuf[21] = 0x41;
-	  sendbuf[22] = 0x45;
-	  sendbuf[23] = 0x0b;
-
-	  for(int i= 0;i<=23;i++)
-	  {
-		  bcc= bcc + sendbuf[i];
-
-	  }
-
-	  sendbuf[24]= bcc;*/
-
-
 
 	uint8_t edip240_protokoll (uint16_t dev_adr, uint8_t max_byte, uint8_t timeout)
 	{
@@ -158,13 +198,18 @@ int main(void)
 
 
 
-	void Clear (uint8_t*clear){
-		clear[0]= 0x11;
+	void edip240_Clear (uint8_t BaseAdress,uint8_t I2CAdress){
+		uint8_t clear[6];
+		uint8_t bcc;
+		clear[0]= I2CAdress;
 		clear[1]= 0x03;
 		clear[2]= 0x1B;
 		clear[3]= 0x44;
 		clear[4]= 0x4C;
-		clear[5]= 0xBF;
+		for (int i=0;i<=4;i++){
+				bcc += clear[i];
+				}
+		clear[5]= bcc;
 	}
 void Invertieren(uint8_t* INV){
 		INV[0]=0x11;
@@ -193,6 +238,58 @@ void Helligkeit (uint8_t *Sendarray,uint8_t staerke)
 
 		Sendarray[6]=bcc;
 }
+
+
+
+
+void edip240_touch_schalter(uint8_t BaseAdress,uint8_t I2CAdress, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t downcode, uint8_t upcode, char *string, uint8_t rahmen)
+{
+    uint8_t arr[64];
+    uint8_t ack[2];
+    uint8_t sum = 0;
+    uint8_t len = 12;
+    int str_len = 0;
+    uint8_t arr_len = (uint8_t)strlen(string) + len;
+    arr[0] = I2CAdress;
+    arr[2] = 0x1B;
+    arr[3] = 0x41;
+    arr[4] = 0x4B;
+    arr[5] = x1;
+    arr[6] = y1;
+    arr[7] = x2;
+    arr[8] = y2;
+    arr[9] = downcode;
+    arr[10] = upcode;
+    arr[11] = 0x43; // C für text begin
+    for (int a = len; a < arr_len + 1; a++)
+    {
+        arr[a] = (uint8_t)string[str_len];
+        if (str_len != strlen(string) - 1)
+        {
+            str_len++;
+        }
+        else
+        {
+            arr[a + 1] = 0x00;
+            arr[a + 2] = 0x1B;
+            arr[a + 3] = 0x41;
+            arr[a + 4] = 0x45;
+            arr[a + 5] = rahmen;
+            arr_len = arr_len + 5;
+            break;
+        }
+    }
+    arr[1] = arr_len - 2;
+    for (int b = 0; b < arr_len; b++)
+    {
+        sum = sum + arr[b];
+    }
+    arr[arr_len] = sum;
+    HAL_I2C_Master_Transmit(&hi2c1,BaseAdress , arr, 21, 0xff);
+    HAL_I2C_Master_Receive(&hi2c1, BaseAdress, ack, 1, 0xff);
+}
+
+/*
 	void edip240_touch_schalter(uint8_t *arr, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t downcode, uint8_t upcode, char *string, uint8_t rahmen)
 	{
 	    uint8_t sum = 0;
@@ -239,7 +336,7 @@ void Helligkeit (uint8_t *Sendarray,uint8_t staerke)
 	    //return arr_len;
 	}
 
-/*
+
 	void ediptft_touch_schalter(uint8_t *arr, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t downcode, uint8_t upcode, char *string, uint8_t rahmen)
 	{
 	    uint8_t sum = 0;
@@ -367,66 +464,39 @@ void getbuffer(uint8_t *get)
     /* USER CODE BEGIN 3 */
 	  if(HAL_GPIO_ReadPin(B1_GPIO_Port,B1_Pin)==0)
 	  	  {
-	  		  while(HAL_GPIO_ReadPin(B1_GPIO_Port,B1_Pin)==0);
-
-	  		  ret=HAL_I2C_IsDeviceReady(&hi2c1, 0xDE, 3, 0xffff);
-	  		  if(ret==0)
-	  		  {
-
-	  			//ediptft_touch_schalter(sendbuf, 0, 0, 479, 271, 1, 2, "TEST", 1);
-	  			//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	  			HAL_I2C_Master_Transmit(&hi2c1,0xDE,loeschen,6,0xff);
-	  			HAL_I2C_Master_Receive(&hi2c1,0xDE,ack,1,0xff);
-	  			edip240_protokoll(0xDE,64,2);
-	  			//HAL_I2C_Master_Transmit(&hi2c1,0xDE,Helli,7,0xff);
-	  			//HAL_I2C_Master_Receive(&hi2c1,0xDE,ack,1,0xff);
-	  			HAL_I2C_Master_Transmit(&hi2c1,0xDE,sendbuf,21,0xff);
-	  			HAL_I2C_Master_Receive(&hi2c1,0xDE,ack,1,0xff);
-
-
-
-	  			//edip240_touch_schalter(sendbuf,1,20,40,48,174,175,"Tast2",10);
-	  			//HAL_I2C_Master_Transmit(&hi2c1,0xDE,sendbuf,64,0xff);
-	  			//HAL_I2C_Master_Receive(&hi2c1,0xDE,ack,1,0xff);
-	  		  }
- }
-
-	  Clear(loeschen);
-	  Invertieren(Invert);
-	  Helligkeit(Helli,1);
-	  edip240_touch_schalter(sendbuf,100,50,140,78,171,205,"Ein",9);
-
-
-
-
-	  if(status==205)
-	  	  		{
-	  	  			HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,SET);
-	  	  			//HAL_I2C_Master_Transmit(&hi2c1,0xDE,Invert,6,0xff);
-	  	  			//HAL_I2C_Master_Receive(&hi2c1,0xDE,ack,1,0xff);
-	  	  		 }
-
-	  	  		else if(status==171)
-	  	  		{
-
-	  	  			HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,RESET);
-
-	  	  		 }
-	  printf("Status: %3i\n",status);
-
-	  	/*  for(int p=0;p<=64;p++)
-	  	  {
-	  		  printf("Daten abgefragt%2i: %2i  Status: %3i\n",p,abfragepuffer[p],status);
+	  	   while(HAL_GPIO_ReadPin(B1_GPIO_Port,B1_Pin)==0);
+	  	   	   ret=HAL_I2C_IsDeviceReady(&hi2c1, 0xDE, 3, 0xffff);
+	  		   if(ret==0)
+	  		      {
+	  			   edip240_protokoll(0xDE,64,2);
+	  			   edip240_Clear(0xDE,0x11);
+	  			   edip240_touch_schalter(0xDE,0x11,100,50,140,78,171,205,"Ein",9);
+	  		      }
 	  	  }
 
+if(status==205)
+	{ ausfuehrung=1;
+	 HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,SET);
+	 while(ausfuehrung==1)
+	 {
+		 for(int a = 0 ; a <= 128 ; a+3)
+		 {
+			 edip240_Gerade_zeichnen(0xDE,0x11,a,0,239,127);
+			 HAL_Delay(10);
+		 }
+		 ausfuehrung=0;
+	 }
+	}
 
-	  	for(int o=0;o<=64;o++)
-	  		  	  {
-	  		  		  printf("Daten Sendepuffer%2i: %2i \n",o,sendbuf[o]);
-	  		  	  }
+else if(status==171)
+	{
 
+	 HAL_GPIO_WritePin(LED_GPIO_Port,LED_Pin,RESET);
 
- */
+	}
+
+printf("Status: %3i\n",status);
+
   }
 
   /* USER CODE END 3 */

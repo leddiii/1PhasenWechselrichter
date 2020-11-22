@@ -79,7 +79,7 @@ void Error_Handler(void);
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-
+uint8_t edip240_SchalterStellung (uint8_t,uint8_t);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
