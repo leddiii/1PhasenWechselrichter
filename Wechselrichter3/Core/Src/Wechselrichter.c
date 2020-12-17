@@ -1,171 +1,72 @@
 #include "Wechselrichter.h"
 #include "math.h"
 #include "main.h"
+#include "tim.h"
 
-float tiefpass(float Uk, float Ykminus1)
-{
-    float T = 1;                // T = Zeitkonstante
-    float Ta = 0.1;             // Ta= Abtastzeit
-    float b = Ta / (T + Ta);    // b wird errechnet
-    float a = 1 - b;            // a wird errechnet
-    YK = b * Uk + a * Ykminus1; // berechnung des neuen Yk wertes
-    return YK;
-}
+
+/*
+In der Funktion getPWM_Array1 wird der übergebene Wert (frequenz) in 256  Werte aufegteilt und in ein Array geschrieben, welches zurück gegeben wird.
+*/
+
+
 
 uint16_t *getPWM_Array1(double Sollwert)
 {
-    Omega = 2.0 * M_PI * Sollwert;
+    Omega = 2.0 * M_PI * Sollwert;											// Omega wird errechnet durch: 2*Pi*f
 
     for (int Wert = 0; Wert <= 255; Wert++)
     {
-    	Winkel = (180.0/255.0)*Wert;
-    	Winkelzeit = ((1/Sollwert)/360.0) * Winkel;
+    	Winkel = (180.0/255.0)*Wert;										// Der Winkel des Sinus wird errechnet
+    	Winkelzeit = ((1/Sollwert)/360.0) * Winkel;							// Die Zeit, die bei dem bestimmten Winkel abgelaufen ist wird berechnet
 
-        Puls = (sin(Omega * Winkelzeit))*(9.98*Sollwert);
-        Array1[Wert] = (uint16_t)Puls;
+        Puls = (sin(Omega * Winkelzeit))*(9.98*Sollwert);					// der Puls, welcher nachher in den DMA geschrieben wird, wird berechnet
+        Array1[Wert] = (uint16_t)Puls;										// der ersten Hälfte des Array werden die Werte hinzugefügt
 
-        //printf(" Wert=%3i Winkel=%1.10f Winkel_t=%1.10f Puls=%4.4f SW=%3.3f \t \n",Wert, Winkel, Winkelzeit, Puls, Sollwert);
     }
-    for (int i=255;i<=size;i++)
+    for (int i=255;i<=size;i++)												// Die zweite Hälfte des Arrays wird mit 0 beschrieben
     {
     	Array1[i]=0;
     }
 
-    return Array1;
+    return Array1;															// das Array wird zurück gegeben
 }
+
+/*
+In der Funktion getPWM_Array2 wird der übergebene Wert (frequenz) in 256  Werte aufegteilt und in ein Array geschrieben, welches zurück gegeben wird.
+*/
 
 
 uint16_t *getPWM_Array2(double Sollwert)
 {
-    Omega = 2.0 * M_PI * Sollwert;
+    Omega = 2.0 * M_PI * Sollwert;											// Omega wird errechnet durch: 2*Pi*f
 
     for (int Wert = 0; Wert <= 255; Wert++)
     {
-    	Winkel = (180.0/255.0)*Wert;
-    	Winkelzeit = ((1/Sollwert)/360.0) * Winkel;
+    	Winkel = (180.0/255.0)*Wert;										// Der Winkel des Sinus wird errechnet
+    	Winkelzeit = ((1/Sollwert)/360.0) * Winkel;							// Die Zeit, die bei dem bestimmten Winkel abgelaufen ist wird berechnet
 
-        Puls = (sin(Omega * Winkelzeit))*(9.98*Sollwert);
-        Array2[Wert+256] = (uint16_t)Puls;
+        Puls = (sin(Omega * Winkelzeit))*(9.98*Sollwert);					// der Puls, welcher nachher in den DMA geschrieben wird, wird berechnet
+        Array2[Wert+256] = (uint16_t)Puls;									// der zweiten Hälfte des Array werden die Werte hinzugefügt
 
-        //printf(" Wert=%3i Winkel=%1.10f Winkel_t=%1.10f Puls=%4.4f SW=%3.3f \t \n",Wert, Winkel, Winkelzeit, Puls, Sollwert);
     }
-    for (int i=0;i<=255;i++)
+    for (int i=0;i<=255;i++)												// Die erste Hälfte des Arrays wird mit 0 beschrieben
     {
     	Array2[i]=0;
     }
 
-    return Array2;
+    return Array2;															// das Array wird zurück gegeben
 }
 
 
-/* #include "Wechselrichter.h"
-
-float YK = 0;
-float tiefpass(float Uk, float Ykminus1)
-{
-    YK = b * Uk + a * Ykminus1; // berechnung des neuen Yk wertes
-    return YK;
-}
-
-
-int *getPWM_Array(double Sollwert)
-{
-	double Winkel = 0.0;
-    Omega = 2.0 * M_PI * Sollwert;
-
-    for (int Wert = 0; Wert <= size; Wert++)
-    {
-        Winkel = (180.0/254.0)*Wert;
-        Winkelzeit = ((1/Sollwert)/360.0) * Winkel;
-        Puls = sin(Omega * Winkelzeit) * 7058.8235;
-        Array[Wert] = (int)Puls;
-    }
-    return Array;
-}
-
-
-HAL_StatusTypeDef StartPWM_DMA(TIM_HandleTypeDef *htim, uint32_t Channel, uint32_t *pData, uint16_t Length){
-  /* Parameter ÃœberprÃ¼fen */
-  /*assert_param(IS_TIM_CCX_INSTANCE(htim->Instance, Channel));
-
-  if((htim->State == HAL_TIM_STATE_BUSY)){
-     return HAL_BUSY;
-  } else if((htim->State == HAL_TIM_STATE_READY)) {
-    if(((uint32_t)pData == 0U ) && (Length > 0U)){
-      return HAL_ERROR;
-    } else {
-      htim->State = HAL_TIM_STATE_BUSY;
-    }
-  }
-  switch (Channel)
-  {
-    case TIM_CHANNEL_1:
-    {
-      /* DMA Error meldung RÃ¼ckgabe */
-    /*  htim->hdma[TIM_DMA_ID_CC1]->XferErrorCallback = TIM_DMAError ;
-
-      /* Aktivieren DMA Kanal */
-    /*  HAL_DMA_Start_IT(htim->hdma[TIM_DMA_ID_CC1], (uint32_t)pData, (uint32_t)&htim->Instance->CCR1, Length);
-
-      /* Aktivieren von Timer Erfassen/vergleichen 1 DMA */
-   /*   __HAL_TIM_ENABLE_DMA(htim, TIM_DMA_CC1);
-    }
-   /* break;
-
-    case TIM_CHANNEL_2:
-    {
-      /* DMA Error meldung RÃ¼ckgabe */
-    /*  htim->hdma[TIM_DMA_ID_CC2]->XferErrorCallback = TIM_DMAError ;
-
-      /* Aktivieren DMA Kanal */
-    /*  HAL_DMA_Start_IT(htim->hdma[TIM_DMA_ID_CC2], (uint32_t)pData, (uint32_t)&htim->Instance->CCR2, Length);
-
-      /* Aktivieren von Timer Erfassen/vergleichen 2 DMA */
-   /*   __HAL_TIM_ENABLE_DMA(htim, TIM_DMA_CC2);
-    }
-    break;
-
-    default:
-    break;
-  }
-  /* Aktivieren den Captur Kanals */
-  /*TIM_CCxChannelCmd(htim->Instance, Channel, TIM_CCx_ENABLE);
-
-  if(IS_TIM_BREAK_INSTANCE(htim->Instance) != RESET)
-  {
-    /* Aktivieren Main Ausgang */
- /*   __HAL_TIM_MOE_ENABLE(htim);
-  }
-
-  /* Aktivieren der Peripherie */
- /* __HAL_TIM_ENABLE(htim);
-
-  /* rÃ¼ckgabe Funktionsausgabe */
-    /* return HAL_OK;
-}
-
-
-void FU_Test_Init(void){
-    HAL_Delay(500);
-    for (int i = 0; i < 5; i++) {
-      HAL_Delay(500);
-      GPIOA->BSRR = 0b0000000000100000;
-      HAL_Delay(1000);
-      GPIOA->BSRR = 0b0000000000100000 << 16;
-    }
-}
-
-
-/*void UART_Greeting(void){
-    char *greet1="Nucleo F446RE 1 Phasen FU V0.1\n\r";
-    char *greet2="------------------------\n\r\n\r";
-    HAL_UART_Transmit(&huart2,(uint8_t *)greet1, strlen(greet1), 0xFFFF);
-    HAL_UART_Transmit(&huart2,(uint8_t *)greet2, strlen(greet2), 0xFFFF);
-}*/
-
-
-    /*void Error_Mes(void){
-    GPIOA->BSRR = 0b0000000000100000;
-    while (1);
-}
+/*
+In der Funktion NEW_Pres wird der übergebene Wert als Prescaler der Timer generiret
 */
+
+void NEW_Pres(double Sollwert)
+{	uint8_t NEW_PS=0;
+	NEW_PS= 63.0-Sollwert;													// NEW_PS wird Errechnet
+	__HAL_TIM_SET_PRESCALER(&htim1, NEW_PS);								// dem Timer 1 wird der neue Prescaler zugewiesen
+	__HAL_TIM_SET_PRESCALER(&htim8, NEW_PS);								// dem Timer 8 wird der neue Prescaler zugewiesen
+
+}
+

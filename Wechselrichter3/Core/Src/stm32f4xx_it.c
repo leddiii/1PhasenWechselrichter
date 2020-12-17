@@ -23,7 +23,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "tim.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,7 +43,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-uint32_t Zaehler_IGBT = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,12 +57,7 @@ uint32_t Zaehler_IGBT = 0;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef hdma_adc1;
-extern DMA_HandleTypeDef hdma_tim1_ch3;
-extern DMA_HandleTypeDef hdma_tim8_ch4_trig_com;
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim8;
-extern TIM_HandleTypeDef htim10;
+
 /* USER CODE BEGIN EV */
 
 extern volatile uint8_t EIN_AUS;
@@ -211,17 +206,16 @@ void SysTick_Handler(void)
 void EXTI1_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI1_IRQn 0 */
-	 //HAL_GPIO_TogglePin(LD2_GPIO_Port,LD2_Pin);	// Der Pin für die interne LED wird getoggelt (wenn EIN dann AUS bzw wenn AUS dann EIN
 
 	   if (EIN_AUS==0)
 	   {															// Wenn die Variable i 0 ist wird folgendes ausgeführt:
-		   EIN_AUS= 1;	// die Variable i wird auf den Wert 1 gesetzt
+		   EIN_AUS= 1;												// die Variable i wird auf den Wert 1 gesetzt
 		   HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,SET);
 	   }
 
 	     else if (EIN_AUS==1)
-	     {														// Wenn die Variable i 1 ist wird folgendes ausgeführt:
-	    	 EIN_AUS= 0;
+	     {															// Wenn die Variable i 1 ist wird folgendes ausgeführt:
+	    	 EIN_AUS= 0;											// die Variable i wird auf den Wert 0 gesetzt
 	    	 HAL_GPIO_WritePin(LD2_GPIO_Port,LD2_Pin,RESET);
 	     }
   /* USER CODE END EXTI1_IRQn 0 */
@@ -239,17 +233,10 @@ void TIM1_UP_TIM10_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
 
-	Zaehler_IGBT ++;
 
-	if(Zaehler_IGBT==256)
-	{
-HAL_GPIO_TogglePin(IGBT3_GPIO_Port,IGBT3_Pin);
-HAL_GPIO_TogglePin(IGBT4_GPIO_Port,IGBT4_Pin);
-Zaehler_IGBT = 0;
-	}
+
   /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
-  HAL_TIM_IRQHandler(&htim10);
+
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
 
   /* USER CODE END TIM1_UP_TIM10_IRQn 1 */

@@ -68,10 +68,8 @@ void Error_Handler(void);
 #define USART_RX_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
-#define IGBT4_Pin GPIO_PIN_7
-#define IGBT4_GPIO_Port GPIOC
-#define IGBT3_Pin GPIO_PIN_8
-#define IGBT3_GPIO_Port GPIOC
+#define SD_Pin GPIO_PIN_6
+#define SD_GPIO_Port GPIOC
 #define PWM_IGBT2_Pin GPIO_PIN_10
 #define PWM_IGBT2_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13

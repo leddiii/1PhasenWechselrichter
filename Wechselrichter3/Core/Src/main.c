@@ -48,20 +48,19 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
 uint8_t Puls_INT =0;
 uint8_t Sollwert =0;
 uint8_t Sollwert_ALT=0;
- uint8_t  NEW_PS;
-float i= 0;
+
+
+volatile uint8_t EIN_AUS =0;
+
 double Sollwert_Double =0;
-float YKminus1 =0.0;																// YKminus1 wird als float mit dem Wert0 deklariert
-double Puls;
-double Wink=0.0;
-double tim=0.0;
-double Omega=0.0;
+
 volatile static char DMA_CH2 [511];
 volatile static char DMA_CH [511];
-volatile uint8_t EIN_AUS =0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,44 +82,8 @@ PUTCHAR_PROTOTYPE
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-/*
 
-void Wechsel_IGBTs_TIM8_AUS_TIM1_EIN(){
-	HAL_TIM_PWM_Stop_DMA(&htim8, TIM_CHANNEL_4);
-	HAL_Delay(10);
-	HAL_TIM_PWM_Start_DMA( &htim1, TIM_CHANNEL_3,(uint32_t*)DMA_CH, size);
-	//if(NEUE_Werte==1){
-		//HAL_DMA_Start(&htim1,(uint32_t*)&DMA,(uint32_t*)DMA_CH2,size);
-		//uint16_t*DMA_CH2;
-		//DMA_CH2= (uint16_t*)&DMA;
-		//for(int o=0;o<255;o++){
-					//printf("%3i  DMA_CH2= %4i \n \t", o,DMA_CH2[o]);
-				//}
-	//}
-}
 
-void Wechsel_IGBTs_TIM1_AUS_TIM8_EIN(){
-	HAL_TIM_PWM_Stop_DMA(&htim1, TIM_CHANNEL_3);
-	HAL_Delay(10);
-	HAL_TIM_PWM_Start_DMA( &htim8, TIM_CHANNEL_4,(uint32_t*)DMA_CH2, size);
-	//if(NEUE_Werte==1){
-		//HAL_DMA_Start(&htim1,(uint32_t*)&DMA,(uint32_t*)DMA_CH3,size);
-		//uint16_t*DMA_CH3;
-		//DMA_CH3= (uint16_t*)&DMA;
-		//for(int o=0;o<255;o++){
-			//printf("%3i  DMA_CH2= %4i \n \t", o,DMA_CH3[o]);
-		//}
-	//}
-}
-
-*/
-
-void NEW_Pres(double Sollwert){
-	 NEW_PS= 63.0-Sollwert_Double;
-	__HAL_TIM_SET_PRESCALER(&htim1, NEW_PS);
-	__HAL_TIM_SET_PRESCALER(&htim8, NEW_PS);
-	__HAL_TIM_SET_PRESCALER(&htim10, NEW_PS);
-}
 
 /* USER CODE END 0 */
 
@@ -131,6 +94,17 @@ void NEW_Pres(double Sollwert){
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
+	 HAL_ADC_Start(&hadc1);																				// Der ADC-Wandler 1 wird Aufgerufen und "eingeschaltet"
+	 HAL_ADC_PollForConversion(&hadc1,100);																// Es wird gewartet, bis der ADC_Wandler fertig für die Kommunikation ist
+	 Sollwert =HAL_ADC_GetValue(&hadc1);																// Der Variable Sollwert, wird der Wert des ADC_Wandlers übergeben
+	 Sollwert_Double =Sollwert/35;
+
+	 uint16_t *DMA_CH;																					// DMA_CH wird als uint16_t gecastet
+	 DMA_CH = (uint16_t*) getPWM_Array1(Sollwert_Double) ;												// DMA_CH werden die Werte der Funktion "getPWM_Array1" übergeben
+
+	 uint16_t *DMA_CH2;																					// DMA_CH2 wird als uint16_t gecastet
+	 DMA_CH2 = (uint16_t*) getPWM_Array2(Sollwert_Double) ;												// DMA_CH2 werden die Werte der Funktion "getPWM_Array2" übergeben
 
   /* USER CODE END 1 */
 
@@ -169,62 +143,40 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-if (EIN_AUS==1){
-	  HAL_ADC_Start(&hadc1);
-	  	  HAL_ADC_PollForConversion(&hadc1,100);
-	  	  Sollwert =HAL_ADC_GetValue(&hadc1);
-	  	Sollwert_Double =Sollwert/10+25;
+	  if (EIN_AUS==1)
+	  {																									// wenn EIN_AUS den Wert 1 hat, wird folgendes ausgeführt:
+		  HAL_ADC_Start(&hadc1);																		// Der ADC-Wandler 1 wird Aufgerufen und "eingeschaltet"
+		  HAL_ADC_PollForConversion(&hadc1,100);														// Es wird gewartet, bis der ADC_Wandler fertig für die Kommunikation ist
 
-	  	  if (Sollwert_ALT-3>Sollwert||Sollwert_ALT+3<=Sollwert)
-	  	  {
-	  		  uint16_t *DMA_CH;
-	  		  DMA_CH = (uint16_t*) getPWM_Array1(Sollwert_Double) ;
+		  Sollwert =HAL_ADC_GetValue(&hadc1);															// Der Variable Sollwert, wird der Wert des ADC_Wandlers übergeben
+		  Sollwert_Double =Sollwert/35;																	// Der Variable Sollwert_double wird der Wert (Sollwert/35) übergeben
 
-	  		  uint16_t *DMA_CH2;
-	  		  DMA_CH2 = (uint16_t*) getPWM_Array2(Sollwert_Double) ;
+		  HAL_GPIO_WritePin(SD_GPIO_Port,SD_Pin,SET);													// Der shutdown vom IR2110 wird deaktiviert (der IR wird freigegeben)
 
-	  		  HAL_TIM_PWM_Start_DMA( &htim8, TIM_CHANNEL_4, (uint32_t*)DMA_CH, 511);
+		  HAL_TIM_PWM_Start_DMA( &htim8, TIM_CHANNEL_4, (uint32_t*)DMA_CH, 511);						// Der Timer 8 starten den Channel 4 über DMA
 
-	  		  HAL_TIM_PWM_Start_DMA( &htim1, TIM_CHANNEL_3, (uint32_t*)DMA_CH2, 511);
+		  HAL_TIM_PWM_Start_DMA( &htim1, TIM_CHANNEL_3, (uint32_t*)DMA_CH2, 511);						// Der Timer 1 starten den Channel 3 über DMA
 
-	  		  HAL_TIM_Base_Start_IT(&htim10);
-	  		  NEW_Pres(Sollwert_Double);
+		  if (Sollwert_ALT-3>Sollwert||Sollwert_ALT+3<=Sollwert)										// Wenn der Sollwert eine abweichung von mehr als 3 digits hat, wird folgendes ausgeführt:
+		  {
+			  uint16_t *DMA_CH;																			// DMA_CH wird als uint16_t gecastet
+			  DMA_CH = (uint16_t*) getPWM_Array1(Sollwert_Double) ;										// DMA_CH werden die Werte der Funktion "getPWM_Array1" übergeben
 
-	  		  Sollwert_ALT=Sollwert;
-	  	  }
+			  uint16_t *DMA_CH2;																		// DMA_CH2 wird als uint16_t gecastet
+			  DMA_CH2 = (uint16_t*) getPWM_Array2(Sollwert_Double) ;									// DMA_CH2 werden die Werte der Funktion "getPWM_Array2" übergeben
 
-	  	  else
-	  	  {
+			  NEW_Pres(Sollwert_Double);																// Die funktion "NEW_Pres" wird aufgerufen um den Prescaler zu verändern
 
-	  	  }
+			  Sollwert_ALT=Sollwert;																	// Der Variable Sollwert_ALT wird der Wert der Variable Sollwert zugewiesen
+		}
+	  }
 
-}
-else
-{
-HAL_TIM_PWM_Stop_DMA(&htim8,TIM_CHANNEL_4);
-HAL_TIM_PWM_Stop_DMA(&htim1,TIM_CHANNEL_3);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	  else
+	  {
+		  HAL_GPIO_WritePin(SD_GPIO_Port,SD_Pin,RESET);													// Der shutdown vom IR2110 wird aktiviert (der IR wird blockiert)
+		  HAL_TIM_PWM_Stop_DMA(&htim8,TIM_CHANNEL_4);													// Der Timer 8 stoppt den Channel 4 über DMA
+		  HAL_TIM_PWM_Stop_DMA(&htim1,TIM_CHANNEL_3);													// Der Timer 1 stoppt den Channel 3 über DMA
+	  }
   }
 
   /* USER CODE END 3 */
